@@ -1,5 +1,12 @@
 import sys
-from products import Product
+from products import (
+    Product,
+    NonStockedProduct,
+    LimitedProduct,
+    Percentage,
+    Second_item_half_price,
+    Buy_two_get_one_free
+)
 from store import Store
 
 
