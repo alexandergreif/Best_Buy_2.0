@@ -1,108 +1,57 @@
 import sys
-from products import (
-    Product,
-    NonStockedProduct,
-    LimitedProduct,
-    Percentage,
-    Second_item_half_price,
-    Buy_two_get_one_free
-)
+from products import Product, NonStockedProduct, LimitedProduct
 from store import Store
+from promotions import PercentDiscount, SecondHalfPrice, ThirdOneFree
 
 
 def quit_program():
     """
-    Exit the shop and terminate the program.
-
-    This function prints a goodbye message and then calls sys.exit() to stop execution.
+    Exit the application and print a goodbye message.
     """
     print("Exiting the shop. Goodbye")
     sys.exit()
 
-def start(store_object):
-    """
-    Starts the store and initiates the store object. Launches the cli menu
-
-    This function prints the menu and waits for user input.
-
-    The function loops until user chooses to exit
-    """
-    funct_dict = {
-        "1": list_all_products,
-        "2": get_all_quantity,
-        "3": wrap_order,
-        "4": quit_program
-    }
-
-    while True:
-        print("      Store Menu      ")
-        print("1: List all products in store")
-        print("2: Show total amount in store")
-        print("3: Make an order")
-        print("4: exit ")
-        user_input = input("Please enter a number of your choice: ")
-
-        if user_input not in funct_dict:
-            print("Wrong input. Please choose one of the menu options.")
-
-        if user_input == "1":
-            funct_dict[user_input](store_object)
-        elif user_input == "2":
-            funct_dict[user_input](store_object)
-        elif user_input == "3":
-            funct_dict[user_input](store_object)
-        elif user_input == "4":
-            funct_dict[user_input]()
-
-def get_all_quantity(store_object):
-    """
-    Calculate and return the total quantity of items in the store.
-
-    This method iterates through all products in the store's inventory and sums up their
-    individual quantities.
-
-    Returns:
-        int: The total number of items available across all products.
-    """
-    all_quantity = store_object.get_total_quantity()
-    print("------")
-    print(f"The total quantity is {all_quantity}")
-    print("------")
-
 
 def list_all_products(store_object):
     """
-    Print all active products in the store.
+    Display a numbered list of all active products in the store.
 
-    Parameters:
+    Args:
         store_object (Store): The store instance containing products.
-
-    The function retrieves active products using store_object.get_all_products()
-    and prints each product's details.
     """
     all_products = store_object.get_all_products()
     print("------")
     for idx, product in enumerate(all_products, start=1):
-        print(f"{idx}. {product.name}, Price: {product.price}, Quantity: {product.quantity}")
+        print(f"{idx}. {product.show()}")
     print("-----")
+
+
+def get_all_quantity(store_object):
+    """
+    Display the total quantity of all products available in the store.
+
+    Args:
+        store_object (Store): The store instance containing products.
+    """
+    total_quantity = store_object.get_total_quantity()
+    print("------")
+    print(f"The total quantity is {total_quantity}")
+    print("------")
+
 
 def wrap_order(store_object):
     """
-        Handle user interaction for placing an order.
+    Handle the interactive process for placing an order:
+    - Display all active products.
+    - Prompt user for product selection and quantity.
+    - Build a shopping list and process the order.
 
-        Parameters:
-            store_object (Store): The store instance from which products will be ordered.
-
-        This function:
-          - Displays all active products.
-          - Prompts the user to select products and enter desired quantities.
-          - Builds a shopping list (a list of tuples (Product, quantity)).
-          - Calls store_object.order() with the shopping list and prints the total price.
-          - Catches and prints errors if the order fails.
+    Args:
+        store_object (Store): The store instance to order products from.
     """
     all_products = store_object.get_all_products()
     for idx, product in enumerate(all_products, start=1):
-        print(f"{idx}. {product.name}, Price: {product.price}, Quantity: {product.quantity}")
+        print(f"{idx}. {product.show()}")
 
     shopping_list = []
     while True:
@@ -128,14 +77,14 @@ def wrap_order(store_object):
 
         shopping_list.append((chosen_product, quantity))
         print("-------")
-        print("Products added to list!!!!")
+        print("Product added to shopping list!")
         print("-------")
 
     if shopping_list:
         try:
             total_price = store_object.order(shopping_list)
             print("--------")
-            print(f"Order is placed. Total price is {total_price}€")
+            print(f"Order placed. Total price is {total_price}€")
             print("--------")
         except ValueError as error:
             print(f"Order failed: {error}")
@@ -143,25 +92,56 @@ def wrap_order(store_object):
         print("No products selected, returning to menu.")
 
 
+def start(store_object):
+    """
+    Launch the interactive command-line interface for the store.
+
+    Args:
+        store_object (Store): The store instance to interact with.
+    """
+    funct_dict = {
+        "1": lambda: list_all_products(store_object),
+        "2": lambda: get_all_quantity(store_object),
+        "3": lambda: wrap_order(store_object),
+        "4": quit_program
+    }
+
+    while True:
+        print("\n      Store Menu      ")
+        print("1: List all products in store")
+        print("2: Show total amount in store")
+        print("3: Make an order")
+        print("4: Exit")
+        user_input = input("Please enter a number of your choice: ")
+
+        if user_input not in funct_dict:
+            print("Wrong input. Please choose one of the menu options.\n")
+            continue
+        else:
+            funct_dict[user_input]()
 
 
 def main():
-
-    #default product list
+    """
+    Set up the store with sample products and promotions, then start the CLI.
+    """
+    # Create a sample product list with various product types.
     product_list = [
         Product("MacBook Air M2", 1450, 100),
-        Product("Bose QuietComfort Earbuds", price=250, quantity=500),
-        Product("Google Pixel 7", price=500, quantity=250)
+        Product("Bose QuietComfort Earbuds", 250, 500),
+        Product("Google Pixel 7", 500, 250),
+        NonStockedProduct("Unlimited Warranty", 100),
+        LimitedProduct("Exclusive Sneakers", 150, 50, maximum=2)
     ]
 
-    best_buy = Store(product_list)
-    # products = best_buy.get_all_products()
-    # print(best_buy.get_total_quantity())
-    # shopping_list = [(products[0], 1), (products[1], 2)]
-    # print(type(shopping_list[0]))
-    # print(best_buy.order(shopping_list))
-    start(best_buy)
+    # Assign sample promotions to specific products.
+    product_list[0].promotion = PercentDiscount(30)  # 30% off for the MacBook Air M2
+    product_list[1].promotion = SecondHalfPrice()  # Second item half price for Bose Earbuds
+    product_list[2].promotion = ThirdOneFree()  # Buy 2, get 1 free for Google Pixel 7
+
+    store = Store(product_list)
+    start(store)
+
 
 if __name__ == "__main__":
     main()
-

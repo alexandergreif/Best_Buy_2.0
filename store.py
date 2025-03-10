@@ -1,42 +1,50 @@
-
+from products import Product
 
 class Store:
     """
-    A class representing a store that manages a collection of products.
-
-    Attributes:
-        list_of_products (List[Product]): A list of Product instances available in the store.
+    Manages a collection of products in the store.
     """
-    def __init__(self, list_of_products):
+    def __init__(self, list_of_products: list):
         """
         Initialize the store with a list of products.
 
         Args:
-            list_of_products (List[Product]): The initial list of products.
+            list_of_products (list): A list containing Product instances.
+
+        Raises:
+            TypeError: If list_of_products is not a list or if items are not valid Product instances.
         """
+        if not isinstance(list_of_products, list):
+            raise TypeError("list_of_products must be a list.")
+        for item in list_of_products:
+            if not hasattr(item, "buy"):
+                raise TypeError("All items must be product instances.")
         self.list_of_products = list_of_products
 
     def add_product(self, product):
         """
-        Add a new product to the store inventory.
+        Add a product to the store.
 
         Args:
-            product (Product): The product to add.
+            product (Product): The product instance to add.
+
+        Raises:
+            ValueError: If the product is None or falsy.
         """
         if not product:
             raise ValueError("Product should not be empty.")
         self.list_of_products.append(product)
-        print(f"Added {product} to the list of Products.")
+        print(f"Added {product.show()} to the store.")
 
     def remove_product(self, product):
         """
-        Remove a product from the store inventory.
+        Remove a product from the store.
 
         Args:
-            product (Product): The product to remove.
+            product (Product): The product instance to remove.
 
         Raises:
-            ValueError: If the product is not found in the inventory.
+            ValueError: If the product is None or not found in the store.
         """
         if not product:
             raise ValueError("Product should not be empty.")
@@ -45,55 +53,50 @@ class Store:
         else:
             raise ValueError("Product not found in the store.")
 
-
-    def get_total_quantity(self):
+    def get_total_quantity(self) -> int:
         """
-        Calculate the total quantity of items available in the store.
+        Calculate the total quantity of all products in the store.
 
         Returns:
-             int: The sum of quantities for all products in the store.
+            int: The sum of the quantities of all products.
         """
-        total_quantity = 0
-        for product in self.list_of_products:
-            total_quantity += product.quantity
-        return total_quantity
+        return sum(product.quantity for product in self.list_of_products)
 
-
-    def get_all_products(self):
+    def get_all_products(self) -> list:
         """
-        Retrieve a list of all active products in the store.
+        Retrieve all active products from the store.
 
         Returns:
-            List[Product]: A list of Product instances that are active.
+            list: A list of active Product instances.
         """
-        return [product for product in self.list_of_products if product.is_active()]
+        return [product for product in self.list_of_products if product.active]
 
-    def order(self, shopping_list):
+    def order(self, shopping_list: list) -> float:
         """
-        Process an order based on a shopping list.
+        Process an order based on the provided shopping list.
 
         Args:
-            shopping_list (List[Tuple[Product, int]]): A list of tuples where each tuple
-                contains a Product and the quantity to purchase.
+            shopping_list (list): A list of tuples, where each tuple contains a Product and the quantity to purchase.
 
         Returns:
             float: The total price for the order.
 
         Raises:
-            ValueError: If a product does not have sufficient quantity or if an invalid
-            quantity is provided.
+            ValueError: If the shopping list is improperly formatted or if any product's quantity is insufficient.
         """
-        if not isinstance(shopping_list[0], tuple):
-            raise ValueError("Shopping list need to contain Item name and quantity as tuple.")
-        total_price = 0
+        if not all(isinstance(item, tuple) and len(item) == 2 for item in shopping_list):
+            raise ValueError("Shopping list must contain tuples of (Product, quantity).")
+        total_price = 0.0
+        # Validate each item before processing the order.
         for product, quantity in shopping_list:
             if quantity <= 0:
                 raise ValueError("Quantity must be positive.")
             if quantity > product.quantity:
                 raise ValueError(
-                f"Not enough quantity for product {product.name}. "
-                f"Requested: {quantity}, Available: {product.quantity}"
-            )
+                    f"Not enough quantity for product {product.name}. "
+                    f"Requested: {quantity}, Available: {product.quantity}"
+                )
+        # Process the order.
+        for product, quantity in shopping_list:
             total_price += product.buy(quantity)
-
         return total_price
